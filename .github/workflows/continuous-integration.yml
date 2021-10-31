@@ -1,6 +1,6 @@
 name: CloudFormation Syntax check
 
-on: [push, pull_request]
+on: [push]
 permissions:
   id-token: write
   contents: write
