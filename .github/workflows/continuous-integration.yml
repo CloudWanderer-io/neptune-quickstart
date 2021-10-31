@@ -1,6 +1,6 @@
 name: Cloudwatch Syntax check
 
-on: [push, pull-request]
+on: [push, pull_request]
 
 jobs:
   syntax-check:
