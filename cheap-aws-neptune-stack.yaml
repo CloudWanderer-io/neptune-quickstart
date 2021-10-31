@@ -1,0 +1,35 @@
+Description: Cheap AWS Neptune Stack for introductory development
+Resources:
+  NeptuneBaseStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-base-stack.yaml
+  WorkbenchStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-workbench-stack.yaml
+      Parameters:
+        NeptuneClusterEndpoint: !GetAtt NeptuneBaseStack.Outputs.DBClusterEndpoint
+        NeptuneClusterSecurityGroups: !GetAtt NeptuneBaseStack.Outputs.NeptuneSG
+        NeptuneClusterSubnetId: !GetAtt NeptuneBaseStack.Outputs.PublicSubnet1
+        SageMakerNotebookName: !GetAtt NeptuneBaseStack.Outputs.DBClusterResourceId
+        SageMakerNotebookRole: !GetAtt SageMakerNotebookRole.Arn
+  SageMakerNotebookRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: >
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "sagemaker.amazonaws.com"
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
