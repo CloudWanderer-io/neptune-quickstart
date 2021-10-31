@@ -1,0 +1,22 @@
+name: CloudFormation Syntax check
+
+on: [push]
+permissions:
+  id-token: write
+  contents: write
+jobs:
+  syntax-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git clone the repository
+        uses: actions/checkout@v1
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume: arn:aws:iam::080863329876:role/GithubActions
+          aws-region: us-east-1
+      - name: Test CloudFormation Syntax
+        run: |
+          aws cloudformation validate-template --template-body file://cheap-aws-neptune-stack.yaml
+          aws cloudformation validate-template --template-body file://neptune-base-stack.yaml
+          aws cloudformation validate-template --template-body file://neptune-workbench-stack.yaml
