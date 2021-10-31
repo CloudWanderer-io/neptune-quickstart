@@ -1,4 +1,4 @@
-name: Cloudwatch Syntax check
+name: CloudFormation Syntax check
 
 on: [push, pull_request]
 permissions:
@@ -15,7 +15,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::080863329876:role/GithubActions
           aws-region: us-east-1
-      - name: Test Cloudwatch Syntax
+      - name: Test CloudFormation Syntax
         run: |
           aws cloudformation validate-template --template-body file://cheap-aws-neptune-stack.yaml
           aws cloudformation validate-template --template-body file://neptune-base-stack.yaml
