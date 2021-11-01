@@ -1,0 +1,149 @@
+Parameters:
+  AutomaticStopTimeMinutes:
+    Description: How many minutes idle before stopping Cloud9. Options, 30min, 1hr, 4hr, 1day, 1week, Never (0)
+    Type: Number
+    Default: 30
+    AllowedValues:
+      - 30
+      - 60
+      - 240
+      - 1440
+      - 10080
+      - 0
+  EC2InstanceType:
+    Description: EC2 instance type on which IDE runs
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t2.nano
+      - t2.micro
+      - t2.small
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+      - t2.2xlarge
+      - m3.medium
+      - m3.large
+      - m3.xlarge
+      - m3.2xlarge
+      - m4.large
+      - m4.xlarge
+      - m4.2xlarge
+      - m4.4xlarge
+      - m4.10xlarge
+      - m4.16xlarge
+      - c3.large
+      - c3.xlarge
+      - c3.2xlarge
+      - c3.4xlarge
+      - c3.8xlarge
+      - c4.large
+      - c4.xlarge
+      - c4.2xlarge
+      - c4.4xlarge
+      - c4.8xlarge
+  SubnetId:
+    Description: The ID of a public subnet into which Cloud9 should be launched.
+    Type: AWS::EC2::Subnet::Id
+Resources:
+  Cloud9:
+    Type: "AWS::Cloud9::EnvironmentEC2"
+    Properties:
+      Name: "Neptune-Cloud9"
+      Description: Neptune Cloud9'
+      ConnectionType: CONNECT_SSM
+      AutomaticStopTimeMinutes: !Ref "AutomaticStopTimeMinutes"
+      SubnetId: !Ref SubnetId
+      InstanceType: !Ref "EC2InstanceType"
+  Cloud9InstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      Roles:
+        - Ref: "Cloud9InstanceNeptuneRole"
+  Cloud9InstanceNeptuneRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: >
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "ec2.amazonaws.com",
+                  "cloud9.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+
+  Cloud9LambdaHelperRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: >
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      Policies:
+        - PolicyName: cloudformation
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "cloudformation:describestackresources"
+                  - "ec2:ReplaceIamInstanceProfileAssociation"
+                  - "ec2:describeiaminstanceprofileassociations"
+                  - "iam:PassRole"
+                Resource: "*"
+  LambdaFunctionSwapInstanceProfile:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      Role: !GetAtt "Cloud9LambdaHelperRole.Arn"
+      Handler: index.lambda_handler
+      Environment:
+        Variables:
+          Cloud9StackName:
+            Fn::Join: ["", ["aws-cloud9-Neptune-Cloud9-", !Ref Cloud9]]
+          CorrectInstanceProfile: !Ref Cloud9InstanceProfile
+      Code:
+        ZipFile: |
+          import os
+          import boto3
+          import jmespath
+
+          def lambda_handler(event, context):
+            cfn = boto3.client('cloudformation')
+            ec2 = boto3.client('ec2')
+            result = cfn.describe_stack_resources(StackName=os.environ['Cloud9StackName'])
+            instance_id = jmespath.search("StackResources[?LogicalResourceId==`Instance`].PhysicalResourceId", result) [0]
+            security_group = jmespath.search("StackResources[?LogicalResourceId==`InstanceSecurityGroup`].PhysicalResourceId", result)[0]
+
+            result = ec2.describe_iam_instance_profile_associations(Filters=[{"Name": "instance-id", "Values":[instance_id]}])
+            instance_profile_association_id = jmespath.search('IamInstanceProfileAssociations[0].AssociationId', result)
+            print(instance_profile_association_id)
+
+            ec2.replace_iam_instance_profile_association(
+                IamInstanceProfile={"Name": os.environ['CorrectInstanceProfile']},
+                AssociationId=instance_profile_association_id
+            )
+
+      Description: Associate cloud9 instance with correct profile
+      TracingConfig:
+        Mode: Active

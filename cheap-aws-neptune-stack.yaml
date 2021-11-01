@@ -14,6 +14,12 @@ Resources:
         NeptuneClusterSubnetId: !GetAtt NeptuneBaseStack.Outputs.PublicSubnet1
         SageMakerNotebookName: !GetAtt NeptuneBaseStack.Outputs.DBClusterResourceId
         SageMakerNotebookRole: !GetAtt SageMakerNotebookRole.Arn
+  Cloud9Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/cloud9-stack.yaml
+      Parameters:
+        SubnetId: !GetAtt NeptuneBaseStack.Outputs.PublicSubnet1
   SageMakerNotebookRole:
     Type: AWS::IAM::Role
     Properties:
