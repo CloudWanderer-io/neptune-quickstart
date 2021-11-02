@@ -1,4 +1,4 @@
-# cheap-neptune-sagemaker-cloud9-stack
+# neptune-quickstart
 ![Architecture Diagram](cheap-neptune-sagemaker-cloud9.drawio.png)
 
 ## Purpose
@@ -6,6 +6,29 @@
 Playing around with Neptune is scary in your personal account, while cheap enough for a business even a small `db.t3.medium` instance with a `ml.t2.medium` workbench left running for a month can cost you 70 USD if you forget to turn it off.
 
 The CloudFormation stacks here deploys a Cloud9 instance, a Sagemaker instance, and a Neptune cluster all configured to turn themselves off automatically.
+
+## Usage
+
+
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - eu-north-1](https://console.aws.amazon.com/cloudformation/home?region=eu-north-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - ap-south-1](https://console.aws.amazon.com/cloudformation/home?region=ap-south-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - eu-west-3](https://console.aws.amazon.com/cloudformation/home?region=eu-west-3#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - eu-west-2](https://console.aws.amazon.com/cloudformation/home?region=eu-west-2#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - eu-west-1](https://console.aws.amazon.com/cloudformation/home?region=eu-west-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - ap-northeast-3](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-3#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - ap-northeast-2](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-2#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - ap-northeast-1](https://console.aws.amazon.com/cloudformation/home?region=ap-northeast-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - sa-east-1](https://console.aws.amazon.com/cloudformation/home?region=sa-east-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - ca-central-1](https://console.aws.amazon.com/cloudformation/home?region=ca-central-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - ap-southeast-1](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - ap-southeast-2](https://console.aws.amazon.com/cloudformation/home?region=ap-southeast-2#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - eu-central-1](https://console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - us-east-1](https://console.aws.amazon.com/cloudformation/home?region=us-east-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - us-east-2](https://console.aws.amazon.com/cloudformation/home?region=us-east-2#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - us-west-1](https://console.aws.amazon.com/cloudformation/home?region=us-west-1#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+- [![Launch CloudFormation Stack](https://s3.amazonaws.com/cloudformation-examples/cloudformation-launch-stack.png) - us-west-2](https://console.aws.amazon.com/cloudformation/home?region=us-west-2#/stacks/new?stackName=neptune-quickstart&templateURL=https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/neptune-quickstart.yaml)
+
+## What's deployed
 
 ### Cloud9
 
