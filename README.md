@@ -36,6 +36,9 @@ Cloud9 is an IDE in AWS which is launched in this configuration inside a VPC to 
 
 Cloud9 is the easiest to configure to turn itself off, as it turns itself off by default after 30 minutes of inactivity.
 
+Cloud9 requires a service linked role, and an EC2 Instance role with the correct name.
+As these may already exist in the account, they are created by the helper lambda if they do not exist already.
+
 ## Sagemaker Notebook
 
 The Sagemaker Notebook in this instance uses the [AWS auto-stop-idle](https://github.com/aws-samples/amazon-sagemaker-notebook-instance-lifecycle-config-samples/tree/master/scripts/auto-stop-idle) script to turn itself off after 30 minutes of inactivity.
