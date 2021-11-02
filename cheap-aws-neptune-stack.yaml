@@ -14,6 +14,12 @@ Resources:
         NeptuneClusterSubnetId: !GetAtt NeptuneBaseStack.Outputs.PublicSubnet1
         SageMakerNotebookName: !GetAtt NeptuneBaseStack.Outputs.DBClusterResourceId
         SageMakerNotebookRole: !GetAtt SageMakerNotebookRole.Arn
+  Cloud9Stack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://s3.eu-west-1.amazonaws.com/cloudwanderer.io/cloudformation/cloud9-stack.yaml
+      Parameters:
+        SubnetId: !GetAtt NeptuneBaseStack.Outputs.PublicSubnet1
   SageMakerNotebookRole:
     Type: AWS::IAM::Role
     Properties:
@@ -33,3 +39,80 @@ Resources:
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AmazonS3ReadOnlyAccess
         - arn:aws:iam::aws:policy/AmazonSageMakerFullAccess
+  Cloud9LambdaHelperRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: >
+        {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Service": [
+                  "lambda.amazonaws.com"
+                ]
+              },
+              "Action": "sts:AssumeRole"
+            }
+          ]
+        }
+      Policies:
+        - PolicyName: cloudformation
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "rds:StopDBCluster"
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                  - "logs:CreateLogGroup"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "arn:aws:logs:*:*:*"
+  LambdaFunctionStopNeptuneTrigger:
+    Type: "AWS::Events::Rule"
+    Properties:
+      ScheduleExpression: "rate(3 hours)"
+      Targets:
+        - Arn: !GetAtt "LambdaFunctionStopNeptune.Arn"
+          Id: 1
+  LambdaFunctionStopNeptuneTriggerPermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:InvokeFunction"
+      FunctionName: !GetAtt "LambdaFunctionStopNeptune.Arn"
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt "LambdaFunctionStopNeptuneTrigger.Arn"
+
+  LambdaFunctionStopNeptune:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.9
+      Role: !GetAtt "Cloud9LambdaHelperRole.Arn"
+      Handler: index.lambda_handler
+      Environment:
+        Variables:
+          NeptuneClusterId: !GetAtt "NeptuneBaseStack.Outputs.DBClusterId"
+      Code:
+        ZipFile: |
+          import os
+          import boto3
+          from botocore.exceptions import ClientError
+
+          def lambda_handler(event, context):
+            neptune = boto3.client('neptune')
+            neptune_cluster_id = os.environ['NeptuneClusterId']
+            try:
+              neptune.stop_db_cluster(DBClusterIdentifier=neptune_cluster_id)
+            except ClientError as ex:
+              if ex.response['Error']['Code'] == 'InvalidDBClusterStateFault':
+                print(f"{neptune_cluster_id} already stopped")
+                return
+              raise
+
+      Description: Stop a Neptune DB cluster if it's been running for too long
+      TracingConfig:
+        Mode: Active

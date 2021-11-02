@@ -597,10 +597,6 @@ Outputs:
   DBInstanceEndpoint:
     Description: Master Instance Endpoint
     Value: !GetAtt "NeptuneDBInstance.Endpoint"
-  # DBReplicaInstanceEndpoint:
-  #   Description: ReadReplica Instance Endpoint
-  #   Condition: CreateDBReplicaInstance
-  #   Value: !GetAtt "NeptuneDBReplicaInstance.Endpoint"
   SparqlEndpoint:
     Description: Sparql Endpoint for Neptune
     Value: !Join
@@ -634,12 +630,6 @@ Outputs:
   DBClusterPort:
     Description: Port for the Neptune Cluster
     Value: !GetAtt "NeptuneDBCluster.Port"
-  # NeptuneLoadFromS3IAMRoleArn:
-  #   Description: IAM Role for loading data in Neptune
-  #   Value: !GetAtt "NeptuneLoadFromS3Role.Arn"
-  # NeptuneIamAuthUser:
-  #   Description: IAM User for accessing Neptune via IAM Auth
-  #   Value: !Ref "NeptuneIamAuthUser"
   PrivateSubnet1:
     Description: Subnet Id
     Value: !Ref "Subnet1"
@@ -660,9 +650,6 @@ Outputs:
     Condition: AZ3Present
     Description: Subnet Id
     Value: !Ref "Subnet6"
-  # NeptuneEC2InstanceProfile:
-  #   Description: Neptune EC2 Instance Profile
-  #   Value: !Ref "NeptuneEC2InstanceProfile"
   VPC:
     Description: VPC
     Value: !Ref "VPC"
@@ -672,23 +659,3 @@ Outputs:
   InternetGateway:
     Description: "Neptune InternetGateway "
     Value: !Ref "IGW"
-  # NatGateway1:
-  #   Description: Neptune NatGateway 1
-  #   Value: !Ref "NATGW1"
-  # NatGateway2:
-  #   Description: Neptune NatGateway 2
-  #   Value: !Ref "NATGW2"
-  # NatGateway3:
-  #   Condition: AZ3Present
-  #   Description: Neptune NatGateway 3
-  #   Value: !Ref "NATGW3"
-  # ElasticIP1:
-  #   Description: Neptune Elastic IP Address for NatGateway 1
-  #   Value: !Ref "ElasticIP1"
-  # ElasticIP2:
-  #   Description: Neptune Elastic IP Address for NatGateway 2
-  #   Value: !Ref "ElasticIP2"
-  # ElasticIP3:
-  #   Condition: AZ3Present
-  #   Description: Neptune Elastic IP Address for NatGateway 3
-  #   Value: !Ref "ElasticIP3"
