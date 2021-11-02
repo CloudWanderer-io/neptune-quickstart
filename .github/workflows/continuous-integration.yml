@@ -17,7 +17,7 @@ jobs:
           aws-region: us-east-1
       - name: Test CloudFormation Syntax
         run: |
-          aws cloudformation validate-template --template-body file://cheap-aws-neptune-stack.yaml
+          aws cloudformation validate-template --template-body file://neptune-quickstart.yaml
           aws cloudformation validate-template --template-body file://neptune-base-stack.yaml
           aws cloudformation validate-template --template-body file://neptune-workbench-stack.yaml
           aws cloudformation validate-template --template-body file://cloud9-stack.yaml
