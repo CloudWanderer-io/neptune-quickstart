@@ -1,5 +1,5 @@
 # neptune-quickstart
-![Architecture Diagram](cheap-neptune-sagemaker-cloud9.drawio.png)
+![Architecture Diagram](neptune-quickstart.drawio.png)
 
 ## Purpose
 
