@@ -138,3 +138,7 @@ Resources:
                   - '(crontab -l 2>/dev/null; echo "*/5 * * * * /usr/bin/python $PWD/autostop.py --time $IDLE_TIME --ignore-connections") | crontab -'
                   - "\n"
                   - EOF
+Outputs:
+  NotebookName:
+    Description: The name of the sagemaker notebook
+    Value: !GetAtt "NeptuneNotebookInstance.NotebookInstanceName"
