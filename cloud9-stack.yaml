@@ -252,3 +252,7 @@ Resources:
     Properties:
       ServiceToken: !GetAtt Cloud9HelperLambda.Arn
       createCloud9Roles: true
+Outputs:
+  Cloud9Id:
+    Description: The ID of the Cloud9 ide
+    Value: !Ref Cloud9
