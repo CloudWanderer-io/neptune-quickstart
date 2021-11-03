@@ -62,11 +62,12 @@ Resources:
                         - Fn::Split:
                             - /
                             - Ref: AWS::StackId
-      Description: Neptune Cloud9'
+      Description: Neptune Cloud9
       ConnectionType: CONNECT_SSM
       AutomaticStopTimeMinutes: !Ref "AutomaticStopTimeMinutes"
       SubnetId: !Ref SubnetId
       InstanceType: !Ref "EC2InstanceType"
+    DependsOn: CreateCloud9ServiceRoles
   Cloud9InstanceProfile:
     Type: "AWS::IAM::InstanceProfile"
     Properties:
@@ -92,7 +93,9 @@ Resources:
             }
           ]
         }
-
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSCloud9SSMInstanceProfile
+        - arn:aws:iam::aws:policy/ReadOnlyAccess
   Cloud9LambdaHelperRole:
     Type: AWS::IAM::Role
     Properties:
@@ -118,12 +121,17 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - "cloudformation:describestackresources"
-                  - "cloudformation:liststacks"
+                  - "cloudformation:DescribeStackResources"
+                  - "cloudformation:ListStacks"
                   - "ec2:DisassociateIamInstanceProfile"
                   - "ec2:AssociateIamInstanceProfile"
-                  - "ec2:describeiaminstanceprofileassociations"
+                  - "ec2:DescribeIamInstanceProfileAssociations"
                   - "iam:PassRole"
+                  - "iam:CreateRole"
+                  - "iam:CreateInstanceProfile"
+                  - "iam:AddRoleToInstanceProfile"
+                  - "iam:CreateServiceLinkedRole"
+                  - "iam:AttachRolePolicy"
                 Resource: "*"
               - Effect: Allow
                 Action:
@@ -131,30 +139,83 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: "arn:aws:logs:*:*:*"
-  LambdaFunctionSwapInstanceProfile:
+  Cloud9HelperLambda:
     Type: AWS::Lambda::Function
     Properties:
       Runtime: python3.9
       Timeout: 15
       Role: !GetAtt "Cloud9LambdaHelperRole.Arn"
       Handler: index.lambda_handler
-      Environment:
-        Variables:
-          Cloud9Id: !Ref Cloud9
-          CorrectInstanceProfile: !Ref Cloud9InstanceProfile
       Code:
         ZipFile: |
-          import os
           import boto3
           import jmespath
           import cfnresponse
+          import json
+          from botocore.exceptions import ClientError
 
-          def swap_instance_profile(event, context):
+          def create_cloud9_roles(input):
+            if "createCloud9Roles" not in input:
+              print(f"createCloud9Roles not in {input}")
+              return
+            iam = boto3.client("iam")
+            assume_role_policy = json.dumps({
+              "Version": "2012-10-17",
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": {
+                    "Service": [
+                      "ec2.amazonaws.com",
+                      "cloud9.amazonaws.com"
+                    ]
+                  },
+                  "Action": "sts:AssumeRole"
+                }
+              ]
+            })
+            try:
+              iam.create_role(
+                Path="/service-role/",
+                RoleName="AWSCloud9SSMAccessRole",
+                AssumeRolePolicyDocument=assume_role_policy
+              )
+              iam.create_instance_profile(
+                InstanceProfileName="AWSCloud9SSMInstanceProfile",
+                Path="/cloud9/"
+              )
+              iam.add_role_to_instance_profile(
+                InstanceProfileName="AWSCloud9SSMInstanceProfile",
+                RoleName="AWSCloud9SSMAccessRole"
+              )
+              iam.attach_role_policy(
+                RoleName="AWSCloud9SSMAccessRole",
+                PolicyArn="arn:aws:iam::aws:policy/AWSCloud9SSMInstanceProfile"
+              )
+            except ClientError as ex:
+              if ex.response['Error']['Code'] == 'EntityAlreadyExists':
+                print("No need to create AWSServiceRoleForAWSCloud9, it already exists")
+              else:
+                raise
+            try:
+              iam.create_service_linked_role(
+                AWSServiceName="cloud9.amazonaws.com",
+              )
+            except ClientError as ex:
+              if ex.response['Error']['Code'] == 'InvalidInput':
+                print("No need to create cloud9.amazonaws.com service linked role, it already exists.")
+                return
+              raise
+
+          def swap_instance_profile(input):
+            if "Cloud9Id" not in input:
+              print(f"Cloud9Id not found in {input}")
+              return
             cfn = boto3.client('cloudformation')
             ec2 = boto3.client('ec2')
 
             stacks = [stack for page in cfn.get_paginator('list_stacks').paginate() for stack in page['StackSummaries']]
-            stack = next(stack for stack in stacks if os.environ['Cloud9Id'] in stack['StackName'])
+            stack = next(stack for stack in stacks if input['Cloud9Id'] in stack['StackName'])
 
             result = cfn.describe_stack_resources(StackName=stack['StackName'])
             instance_id = jmespath.search("StackResources[?LogicalResourceId==`Instance`].PhysicalResourceId", result) [0]
@@ -164,15 +225,17 @@ Resources:
             instance_profile_association_id = jmespath.search('IamInstanceProfileAssociations[0].AssociationId', result)
 
             ec2.disassociate_iam_instance_profile(AssociationId=instance_profile_association_id)
-            ec2.associate_iam_instance_profile(InstanceId=instance_id, IamInstanceProfile={"Name": os.environ['CorrectInstanceProfile']})
+            ec2.associate_iam_instance_profile(InstanceId=instance_id, IamInstanceProfile={"Name": input['CorrectInstanceProfile']})
 
 
           def lambda_handler(event, context):
-
+            print(json.dumps(event))
             try:
-              swap_instance_profile(event, context)
+              create_cloud9_roles(event["ResourceProperties"])
+              swap_instance_profile(event["ResourceProperties"])
               cfnresponse.send(event, context, cfnresponse.SUCCESS, {})
-            except:
+            except Exception as ex:
+              raise ex
               cfnresponse.send(event, context, cfnresponse.FAILED, {})
 
       Description: Associate cloud9 instance with correct profile
@@ -181,4 +244,11 @@ Resources:
   SwapInstanceProfile:
     Type: Custom::SwapInstanceProfile
     Properties:
-      ServiceToken: !GetAtt LambdaFunctionSwapInstanceProfile.Arn
+      ServiceToken: !GetAtt Cloud9HelperLambda.Arn
+      Cloud9Id: !Ref Cloud9
+      CorrectInstanceProfile: !Ref Cloud9InstanceProfile
+  CreateCloud9ServiceRoles:
+    Type: Custom::SwapInstanceProfile
+    Properties:
+      ServiceToken: !GetAtt Cloud9HelperLambda.Arn
+      createCloud9Roles: true
